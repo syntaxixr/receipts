@@ -1,0 +1,71 @@
+name: Study
+
+# Runs receipts over real pull requests and reports how many of them prove
+# their change. Manual only: it installs and tests other people's projects.
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "aidev (agent PRs from the AIDev dataset), or a config path such as study/agents.json"
+        default: aidev
+      max_repos:
+        description: Repositories to sample (aidev only)
+        default: "40"
+      per_repo:
+        description: Pull requests per repository (aidev only)
+        default: "5"
+
+permissions:
+  contents: read
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - run: npm ci && npm run build
+
+      - name: Build the config
+        env:
+          SOURCE: ${{ inputs.source }}
+          MAX_REPOS: ${{ inputs.max_repos }}
+          PER_REPO: ${{ inputs.per_repo }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ "$SOURCE" = "aidev" ]; then
+            pip install -q pandas pyarrow huggingface_hub
+            python study/aidev.py --out study-config.json --max-repos "$MAX_REPOS" --per-repo "$PER_REPO"
+          else
+            cp "$SOURCE" study-config.json
+          fi
+
+      - name: Run receipts over every pull request
+        run: node study/run.mjs --config study-config.json --out study-out || true
+
+      - name: Report
+        if: always()
+        run: |
+          node study/report.mjs study-out/results.jsonl > study-out/report.md
+          cat study-out/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: study
+          path: |
+            study-config.json
+            study-out/results.jsonl
+            study-out/report.md
+            study-out/skipped.txt
+            study-out/receipts/
+          if-no-files-found: warn

@@ -1,0 +1,26 @@
+name: Release
+
+# Attaches the standalone skill (prove-fix.zip, for Claude apps) to every
+# published release. The zip is the plugin's skill folder as committed: the
+# SKILL.md and the bundled CLI, nothing else.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  skill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Pack the skill
+        run: cd plugin/skills && zip -qr "$GITHUB_WORKSPACE/prove-fix.zip" prove-fix -x '*/__pycache__/*'
+      - name: Attach it to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" prove-fix.zip --clobber --repo "$GITHUB_REPOSITORY"
