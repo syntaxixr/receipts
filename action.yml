@@ -1,0 +1,136 @@
+name: Receipts Red-Green Proof
+description: "Proves a PR's tests catch its change: each changed test runs with the change and without it."
+author: syntaxixr
+branding:
+  icon: check-square
+  color: green
+
+inputs:
+  base:
+    description: Base ref to compare against. Defaults to the pull request's base branch.
+    required: false
+  mode:
+    description: "fix | feat | refactor. Defaults to PR labels, PR title prefix, then commit messages."
+    required: false
+  fail-on:
+    description: "Comma-separated verdicts that fail the check: broken,theater,changed,weak,flaky,skipped,no-tests"
+    required: false
+    default: broken,theater,changed
+  reruns:
+    description: Extra runs for failing tests, to tell flakes from real failures.
+    required: false
+    default: "2"
+  timeout:
+    description: Seconds per test run. A test still running then counts as failed (a hang the change fixed).
+    required: false
+    default: "300"
+  python:
+    description: Python interpreter for pytest.
+    required: false
+  js-runner:
+    description: "vitest | jest. Defaults to what package.json uses."
+    required: false
+  working-directory:
+    description: Directory inside the repository to run in.
+    required: false
+    default: .
+  comment:
+    description: Post (and keep updating) one comment with the report on the pull request.
+    required: false
+    default: "true"
+  github-token:
+    description: Token used to post the comment. Needs pull-requests write access. Only the comment step sees it, not the step that runs the tests.
+    required: false
+    default: ${{ github.token }}
+  comment-author:
+    description: Login that owns the report comment, used to find and update it. Change it only when github-token is not the default token.
+    required: false
+    default: github-actions[bot]
+
+outputs:
+  passed:
+    description: '"true" when no --fail-on verdict was found.'
+    value: ${{ steps.check.outputs.passed }}
+  receipt:
+    description: Path to the JSON receipt.
+    value: ${{ steps.check.outputs.receipt }}
+
+runs:
+  using: composite
+  steps:
+    - name: Make the base branch available
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        BASE: ${{ inputs.base || github.base_ref }}
+      run: |
+        # The merge base must be reachable: a depth-1 checkout has no history.
+        if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+          git fetch --no-tags --quiet --unshallow origin || true
+        fi
+        if [ -n "$BASE" ] && ! git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null; then
+          git fetch --no-tags --quiet origin "+refs/heads/${BASE#origin/}:refs/remotes/origin/${BASE#origin/}" || true
+        fi
+
+    - name: Run receipts
+      id: check
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        INPUT_BASE: ${{ inputs.base }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_RERUNS: ${{ inputs.reruns }}
+        INPUT_TIMEOUT: ${{ inputs.timeout }}
+        INPUT_PYTHON: ${{ inputs.python }}
+        INPUT_JS_RUNNER: ${{ inputs.js-runner }}
+      run: |
+        args=(check --json "$RUNNER_TEMP/receipt.json" --markdown "$RUNNER_TEMP/receipt.md"
+              --fail-on "$INPUT_FAIL_ON" --reruns "$INPUT_RERUNS" --timeout "$INPUT_TIMEOUT")
+        [ -n "$INPUT_BASE" ] && args+=(--base "$INPUT_BASE")
+        [ -n "$INPUT_MODE" ] && args+=(--mode "$INPUT_MODE")
+        [ -n "$INPUT_PYTHON" ] && args+=(--python "$INPUT_PYTHON")
+        [ -n "$INPUT_JS_RUNNER" ] && args+=(--js-runner "$INPUT_JS_RUNNER")
+        set +e
+        # The tests are the pull request's code. Keep the runner's command files
+        # out of their environment, so they cannot set variables, outputs or PATH
+        # for the steps that follow (the comment step holds a token).
+        env -u GITHUB_ENV -u GITHUB_PATH -u GITHUB_OUTPUT -u GITHUB_STATE -u GITHUB_STEP_SUMMARY \
+          node "$GITHUB_ACTION_PATH/plugin/skills/prove-fix/scripts/cli.js" "${args[@]}"
+        code=$?
+        set -e
+        [ -f "$RUNNER_TEMP/receipt.md" ] && cat "$RUNNER_TEMP/receipt.md" >> "$GITHUB_STEP_SUMMARY"
+        echo "code=$code" >> "$GITHUB_OUTPUT"
+        echo "passed=$([ "$code" = 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        echo "receipt=$RUNNER_TEMP/receipt.json" >> "$GITHUB_OUTPUT"
+
+    - name: Comment on the pull request
+      if: inputs.comment == 'true' && github.event.pull_request.number && steps.check.outputs.code != '2'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+        AUTHOR: ${{ inputs.comment-author }}
+      run: |
+        marker='<!-- receipts-report -->'
+        body="$marker"$'\n'"$(cat "$RUNNER_TEMP/receipt.md")"
+        # Only a comment this action wrote is updated: anyone can post a comment
+        # that starts with the marker, and that one must not become the report.
+        existing=$(gh api --paginate "repos/$REPO/issues/$PR/comments" 2>/dev/null \
+          | jq -r --arg m "$marker" --arg a "$AUTHOR" \
+              '.[] | select(.user.login == $a and (.body | startswith($m))) | .id' \
+          | head -n1 || true)
+        if [ -n "$existing" ]; then
+          gh api -X PATCH "repos/$REPO/issues/comments/$existing" -f body="$body" >/dev/null \
+            || echo "::warning::receipts could not update its PR comment (token needs pull-requests: write)."
+        else
+          gh api -X POST "repos/$REPO/issues/$PR/comments" -f body="$body" >/dev/null \
+            || echo "::warning::receipts could not comment on the PR (fork PRs get a read-only token; the job summary has the report)."
+        fi
+
+    - name: Set the check result
+      shell: bash
+      env:
+        CODE: ${{ steps.check.outputs.code }}
+      run: exit "$CODE"
