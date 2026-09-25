@@ -1,0 +1,68 @@
+[
+  {
+    "name": "claude-agent-sdk-python",
+    "url": "https://github.com/anthropics/claude-agent-sdk-python",
+    "runner": "python",
+    "history": false,
+    "pulls": true,
+    "maxPulls": 20,
+    "setup": [
+      "pip install -q -U pip",
+      "pip install -q -e '.[dev]'"
+    ]
+  },
+  {
+    "name": "llm",
+    "url": "https://github.com/simonw/llm",
+    "runner": "python",
+    "history": false,
+    "pulls": true,
+    "maxPulls": 20,
+    "setup": [
+      "pip install -q -U pip",
+      "pip install -q -e .",
+      "pip install -q --group dev",
+      "pip install -q httpx sqlite-migrate pytest-httpx"
+    ]
+  },
+  {
+    "name": "mcp-python-sdk",
+    "url": "https://github.com/modelcontextprotocol/python-sdk",
+    "runner": "python",
+    "history": false,
+    "pulls": true,
+    "maxPulls": 20,
+    "setup": [
+      "pip install -q uv",
+      "uv sync --quiet --all-extras --all-packages"
+    ],
+    "pythonPath": ".venv/bin/python"
+  },
+  {
+    "name": "openai-agents-python",
+    "url": "https://github.com/openai/openai-agents-python",
+    "runner": "python",
+    "history": false,
+    "pulls": true,
+    "maxPulls": 20,
+    "setup": [
+      "pip install -q -U pip",
+      "pip install -q -e .",
+      "pip install -q --group dev"
+    ]
+  },
+  {
+    "name": "fastmcp",
+    "url": "https://github.com/PrefectHQ/fastmcp",
+    "runner": "python",
+    "history": false,
+    "pulls": true,
+    "maxPulls": 20,
+    "timeoutMin": 15,
+    "setup": [
+      "pip install -q uv",
+      "uv sync --quiet --all-extras --all-packages"
+    ],
+    "pythonPath": ".venv/bin/python"
+  }
+]

@@ -1,0 +1,106 @@
+[
+  {
+    "name": "click",
+    "url": "https://github.com/pallets/click",
+    "runner": "python",
+    "setup": [
+      "pip install -q -e . pytest"
+    ]
+  },
+  {
+    "name": "itsdangerous",
+    "url": "https://github.com/pallets/itsdangerous",
+    "runner": "python",
+    "setup": [
+      "pip install -q -e . pytest freezegun"
+    ]
+  },
+  {
+    "name": "markupsafe",
+    "url": "https://github.com/pallets/markupsafe",
+    "runner": "python",
+    "setup": [
+      "pip install -q -e . pytest"
+    ]
+  },
+  {
+    "name": "sqlparse",
+    "url": "https://github.com/andialbrecht/sqlparse",
+    "runner": "python",
+    "setup": [
+      "pip install -q -e . pytest"
+    ]
+  },
+  {
+    "name": "humanize",
+    "url": "https://github.com/python-humanize/humanize",
+    "runner": "python",
+    "setup": [
+      "pip install -q -e . pytest freezegun"
+    ]
+  },
+  {
+    "name": "marshmallow",
+    "url": "https://github.com/marshmallow-code/marshmallow",
+    "runner": "python",
+    "setup": [
+      "pip install -q -e . pytest simplejson"
+    ]
+  },
+  {
+    "name": "more-itertools",
+    "url": "https://github.com/more-itertools/more-itertools",
+    "runner": "python",
+    "setup": [
+      "pip install -q -e . pytest"
+    ]
+  },
+  {
+    "name": "tomlkit",
+    "url": "https://github.com/python-poetry/tomlkit",
+    "runner": "python",
+    "setup": [
+      "git submodule update --init --quiet || true",
+      "pip install -q -e . pytest pyyaml"
+    ]
+  },
+  {
+    "name": "dateutil",
+    "url": "https://github.com/dateutil/dateutil",
+    "runner": "python",
+    "setup": [
+      "pip install -q -e . pytest freezegun hypothesis"
+    ]
+  },
+  {
+    "name": "dayjs",
+    "url": "https://github.com/iamkun/dayjs",
+    "runner": "js",
+    "python": false,
+    "jsRunner": "jest",
+    "setup": [
+      "npm install --silent --no-audit --no-fund --ignore-scripts --legacy-peer-deps"
+    ],
+    "env": {
+      "TZ": "America/New_York"
+    }
+  },
+  {
+    "name": "ufo",
+    "url": "https://github.com/unjs/ufo",
+    "runner": "js",
+    "python": false,
+    "setup": [
+      "npm install --silent --no-audit --no-fund --ignore-scripts --legacy-peer-deps"
+    ]
+  },
+  {
+    "name": "defu",
+    "url": "https://github.com/unjs/defu",
+    "runner": "js",
+    "python": false,
+    "setup": [
+      "npm install --silent --no-audit --no-fund --ignore-scripts --legacy-peer-deps"
+    ]
+  }
+]
