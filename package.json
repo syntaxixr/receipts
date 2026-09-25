@@ -1,0 +1,51 @@
+{
+  "name": "@syntaxixr/receipts",
+  "version": "0.1.0",
+  "description": "Proves your AI agent's tests actually catch the bug: red→green verification for pull requests.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "receipts": "plugin/skills/prove-fix/scripts/cli.js"
+  },
+  "files": [
+    "plugin/skills/prove-fix/scripts",
+    "action.yml"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p . --noEmit",
+    "test": "npm run build && vitest run --config test/vitest.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "jest": "^30.5.2",
+    "playwright-core": "^1.63.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/syntaxixr/receipts.git"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-skills",
+    "agent-skills",
+    "anthropic",
+    "ai-agents",
+    "coding-agents",
+    "testing",
+    "verification",
+    "red-green",
+    "tdd",
+    "pytest",
+    "vitest",
+    "jest",
+    "code-review",
+    "github-action"
+  ]
+}
