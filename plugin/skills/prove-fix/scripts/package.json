@@ -1,0 +1,6 @@
+{
+  "name": "receipts-cli",
+  "private": true,
+  "type": "module",
+  "description": "The built Receipts CLI. No dependencies: the skill, the Claude Code plugin, the GitHub Action and npx all run it as is."
+}

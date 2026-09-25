@@ -1,0 +1,24 @@
+{
+  "name": "receipts",
+  "owner": {
+    "name": "syntaxixr"
+  },
+  "metadata": {
+    "description": "Receipts: proof that a change's tests would have caught the bug."
+  },
+  "plugins": [
+    {
+      "name": "receipts-check",
+      "source": "./plugin",
+      "description": "Makes Claude prove its fixes: every test it adds or edits must fail without the change and pass with it.",
+      "category": "testing",
+      "tags": [
+        "claude-skills",
+        "agent-skills",
+        "testing",
+        "tdd",
+        "verification"
+      ]
+    }
+  ]
+}

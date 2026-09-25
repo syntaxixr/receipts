@@ -1,0 +1,25 @@
+{
+  "name": "receipts-check",
+  "description": "Makes Claude prove its fixes: every test it adds or edits must fail without the change and pass with it.",
+  "author": {
+    "name": "syntaxixr"
+  },
+  "homepage": "https://github.com/syntaxixr/receipts",
+  "repository": "https://github.com/syntaxixr/receipts",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "claude-skills",
+    "agent-skills",
+    "skill",
+    "testing",
+    "tdd",
+    "red-green",
+    "verification",
+    "code-review",
+    "ai-agents",
+    "pytest",
+    "vitest",
+    "jest"
+  ]
+}
