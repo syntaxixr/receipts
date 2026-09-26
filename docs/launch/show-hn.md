@@ -12,13 +12,13 @@ Coding agents write most of the tests in their pull requests now. A green run te
 
 Receipts runs every test a change adds or edits twice: with the change, and with the changed source files reverted to the base branch. A test for a fix must fail without it. Each test gets a verdict: PROVEN (fails without the change), GUARD (passes both ways next to a proving test: a regression guard), THEATER (passes both ways and nothing proves the change), WEAK (fails only because the code it calls didn't exist yet).
 
-To see how this plays out on real code, we ran it over 181 changes: maintainer fix commits in 12 libraries (click, sqlparse, marshmallow, dateutil, dayjs…) and 100 pull requests with coding-agent fingerprints in 5 agent-heavy repos (Claude Agent SDK, OpenAI Agents SDK, MCP Python SDK, fastmcp, simonw/llm). What we found:
+To see how this plays out on real code, I ran it over 181 changes: maintainer fix commits in 12 libraries (click, sqlparse, marshmallow, dateutil, dayjs…) and 100 pull requests with coding-agent fingerprints in 5 agent-heavy repos (Claude Agent SDK, OpenAI Agents SDK, MCP Python SDK, fastmcp, simonw/llm). What I found:
 
 - Most changes are proven: in 90% of maintainer fixes and 82% of agent PRs a test fails without the change and none of the others is THEATER or WEAK. These are well-run projects.
-- The agent-specific gap is WEAK, not THEATER: in 10% of agent PRs, the tests fail on the old code only because the test file imports a name the change adds, so nothing in it ever runs against the old behavior. No maintainer commit had that shape.
+- The agent-specific gap is WEAK, not THEATER: in 10% of agent PRs, the tests fail on the old code only because the test file imports a name the change adds, so nothing in it ever runs against the old behavior. No maintainer commit had that shape. Example: https://github.com/anthropics/claude-agent-sdk-python/pull/1016, where the test file imports two new names at the top, so all 10 tests, including an existing one, fail on the old code at the import line.
 - Every THEATER had a story: fixes that only change types (a TypedDict key; TypeScript types), a Windows-only fix tested on Linux, and a `__repr__` fix whose new output matched the inherited one, so the regression test passed on the old code too.
 
-Method, caveats, every change with a link, and the scripts: https://github.com/syntaxixr/receipts/blob/main/docs/study.md
+Method, caveats, every change with a link, and the scripts: https://github.com/syntaxixr/receipts/blob/main/docs/study.md (data: https://huggingface.co/datasets/syntaxixr/receipts-study)
 
 Details that took real history to get right: new regression cases usually arrive as one more row in a parametrize table or a case table in a loop; `test:`/`chore:` commits must be judged as behavior-preserving; a fix for a hang must count the hang as the failure; and a non-editable `pip install .` makes tests import site-packages, so the swap would prove nothing (Receipts detects that and says so instead of guessing).
 
