@@ -21,7 +21,7 @@
     "test": "npm run build && vitest run --config test/vitest.config.ts"
   },
   "devDependencies": {
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.3",
     "jest": "^30.5.2",
     "playwright-core": "^1.63.0",
     "typescript": "^7.0.2",
